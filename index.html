@@ -44,6 +44,7 @@
             height: 100vh;
         }
 
+        /* MOBILE HEADER */
         .mobile-header {
             display: none;
             justify-content: space-between;
@@ -56,7 +57,7 @@
             box-shadow: 0 2px 10px rgba(0,0,0,0.05);
         }
         .mobile-header .logo { margin: 0; font-size: 20px; }
-        .hamburger-btn {
+        .hamburger-btn, .icon-btn {
             background: none; border: none; color: var(--charcoal-900); cursor: pointer;
             display: flex; align-items: center; justify-content: center;
         }
@@ -67,6 +68,7 @@
         }
         .sidebar-overlay.show { display: block; opacity: 1; }
 
+        /* SIDEBAR */
         .sidebar {
             width: 260px;
             background: var(--pearl-card);
@@ -119,6 +121,17 @@
         }
         .btn-secondary:hover { background: var(--silver-200); }
 
+        /* PRIVACY / HIDE BUTTON */
+        .btn-privacy {
+            background: var(--pearl-card); border: 1px solid var(--silver-200);
+            padding: 8px 14px; border-radius: 20px; font-size: 12px; font-weight: 700;
+            color: var(--charcoal-900); cursor: pointer; display: flex; align-items: center; gap: 8px;
+            transition: 0.2s; box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+        .btn-privacy:hover { background: var(--silver-100); border-color: var(--charcoal-900); }
+        .btn-privacy.active { background: var(--charcoal-900); color: #fff; border-color: var(--charcoal-900); }
+
+        /* MAIN CONTENT AREA */
         .main-wrapper {
             flex: 1; overflow-y: auto; padding: 40px; position: relative;
             transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), filter 0.4s;
@@ -132,6 +145,7 @@
         .page-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 30px; flex-wrap: wrap; gap: 15px;}
         .page-title { font-size: 36px; font-weight: 800; letter-spacing: -1.5px; color: var(--charcoal-900); }
 
+        /* BENTO GRID */
         .bento-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -271,9 +285,14 @@
 <!-- MOBILE HEADER -->
 <div class="mobile-header">
     <div class="logo">Executive<span>Bento</span></div>
-    <button class="hamburger-btn" onclick="toggleMobileMenu()">
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
-    </button>
+    <div style="display:flex; align-items:center; gap:12px;">
+        <button class="icon-btn" onclick="togglePrivacyMode()" title="Toggle Privacy" style="font-size:18px;">
+            <span id="mobile-privacy-icon">👁️</span>
+        </button>
+        <button class="hamburger-btn" onclick="toggleMobileMenu()">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+        </button>
+    </div>
 </div>
 <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleMobileMenu()"></div>
 
@@ -300,7 +319,6 @@
     </div>
 
     <div class="sidebar-bottom">
-        <!-- Cloud Sync Badge & Settings Trigger -->
         <div class="sync-badge" onclick="openModal('sync-modal')">
             <span><span class="sync-dot" id="sync-dot"></span><span id="sync-text">Cloud Sync</span></span>
             <span style="font-size:12px;">⚙️</span>
@@ -315,7 +333,7 @@
         <div style="display: flex; gap: 8px;">
             <button class="btn-secondary" onclick="document.getElementById('importFile').click()">Import</button>
             <button class="btn-secondary" onclick="exportData()">Backup</button>
-            <input type="file" id="importFile" style="display:none" accept=".json" onchange="importData(event)">
+            <input type="file" id="importFile" style="display:none" accept=".json,.enc.json" onchange="importData(event)">
         </div>
         
         <div style="display: flex; gap: 8px;">
@@ -336,7 +354,15 @@
     <!-- OVERVIEW / BENTO GRID -->
     <div id="overview" class="page active">
         <div class="page-header">
-            <div><h1 class="page-title">Command Center</h1><p style="color:var(--text-muted); font-weight:600;">Your financial bento grid.</p></div>
+            <div>
+                <h1 class="page-title">Command Center</h1>
+                <p style="color:var(--text-muted); font-weight:600;">Your financial bento grid.</p>
+            </div>
+            <!-- PRIVACY TOGGLE BUTTON -->
+            <button class="btn-privacy" id="privacy-btn" onclick="togglePrivacyMode()">
+                <span id="privacy-icon">👁️</span>
+                <span id="privacy-label">Hide Balances</span>
+            </button>
         </div>
         
         <div class="bento-grid">
@@ -506,7 +532,7 @@
     <button class="btn-submit" id="btn-submit" onclick="saveRecord()">Record Snapshot</button>
 </div>
 
-<!-- CLOUD SYNC & ENCRYPTION SETTINGS MODAL -->
+<!-- CLOUD SYNC MODAL -->
 <div class="modal-bg" id="sync-modal" onclick="closeModal('sync-modal')">
     <div class="modal-content" onclick="event.stopPropagation()">
         <h2 style="font-size:22px; font-weight:800; margin-bottom:6px;">Encrypted Cloud Sync</h2>
@@ -578,7 +604,38 @@
 
 <script>
     // ==========================================
-    // 1. CRYPTO ENGINE (Web Crypto API: AES-256-GCM + PBKDF2)
+    // 1. PRIVACY / MASK MONEY ENGINE
+    // ==========================================
+    let isPrivacyMode = localStorage.getItem('nexus_privacy_mode') === 'true';
+
+    function togglePrivacyMode() {
+        isPrivacyMode = !isPrivacyMode;
+        localStorage.setItem('nexus_privacy_mode', isPrivacyMode ? 'true' : 'false');
+        updatePrivacyUI();
+        refreshView();
+    }
+
+    function updatePrivacyUI() {
+        const btn = document.getElementById('privacy-btn');
+        const icon = document.getElementById('privacy-icon');
+        const label = document.getElementById('privacy-label');
+        const mobileIcon = document.getElementById('mobile-privacy-icon');
+
+        if (isPrivacyMode) {
+            if (btn) btn.classList.add('active');
+            if (icon) icon.innerText = '🙈';
+            if (label) label.innerText = 'Show Balances';
+            if (mobileIcon) mobileIcon.innerText = '🙈';
+        } else {
+            if (btn) btn.classList.remove('active');
+            if (icon) icon.innerText = '👁️';
+            if (label) label.innerText = 'Hide Balances';
+            if (mobileIcon) mobileIcon.innerText = '👁️';
+        }
+    }
+
+    // ==========================================
+    // 2. CRYPTO ENGINE (Web Crypto API: AES-256-GCM + PBKDF2)
     // ==========================================
     const CryptoService = {
         bufToBase64(buf) {
@@ -635,7 +692,7 @@
     };
 
     // ==========================================
-    // 2. GIST SYNC SERVICE
+    // 3. GIST SYNC SERVICE
     // ==========================================
     let syncConfig = {
         token: localStorage.getItem('nexus_sync_token') || '',
@@ -770,16 +827,12 @@
 
         closeModal('sync-modal');
         
-        // If local data exists, push it; else pull
-        if (db.length > 0) {
-            pushToGist();
-        } else {
-            pullFromGist(true);
-        }
+        if (db.length > 0) pushToGist();
+        else pullFromGist(true);
     }
 
     // ==========================================
-    // 3. CORE APPLICATION STATE
+    // 4. CORE APP STATE & FORMATTING
     // ==========================================
     let db = JSON.parse(localStorage.getItem('nexus_vision_db')) || [];
     let goals = JSON.parse(localStorage.getItem('nexus_vision_goals')) || [10000, 50000, 100000, 250000];
@@ -790,7 +843,10 @@
 
     const symMap = { 'USD': '$', 'CAD': 'C$', 'INR': '₹' };
     const sym = () => symMap[currency];
-    const fmt = (v) => {
+    
+    // FORMATTER WITH PRIVACY MASK
+    const fmt = (v, forceRaw = false) => {
+        if (isPrivacyMode && !forceRaw) return `${sym()}••••••`;
         const num = Number(v);
         return num < 0 
             ? `-${sym()}${Math.abs(num).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}` 
@@ -803,7 +859,7 @@
         localStorage.setItem('nexus_vision_db', JSON.stringify(db));
         localStorage.setItem('nexus_vision_goals', JSON.stringify(goals));
         localStorage.setItem('nexus_currency', currency);
-        pushToGist(); // Auto-sync to encrypted Gist
+        pushToGist();
     }
     
     function setCurrency(val) { currency = val; saveState(); refreshView(); }
@@ -834,6 +890,10 @@
     }
 
     function animateNumber(el, endVal, duration, formatter) {
+        if (isPrivacyMode) {
+            el.innerText = formatter(endVal);
+            return;
+        }
         let start = null;
         const step = (timestamp) => {
             if (!start) start = timestamp;
@@ -1039,7 +1099,7 @@
 
         const goalCircle = document.getElementById('goal-circle');
 
-        if (animate && total > 0) {
+        if (animate && total > 0 && !isPrivacyMode) {
             animateNumber(document.getElementById('dash-nw'), total, animDuration, fmt);
             animateNumber(document.getElementById('dash-mom'), diff, animDuration, (v) => `${v>=0?'+':''}${fmt(v)}`);
             animateNumber(document.getElementById('dash-liquid'), liquid, animDuration, fmt);
@@ -1052,7 +1112,7 @@
             goalCircle.style.strokeDashoffset = 377 - (gPct/100*377);
         } else {
             document.getElementById('dash-nw').innerText = fmt(total);
-            document.getElementById('dash-mom').innerText = `${diff>=0?'+':''}${fmt(diff)}`;
+            document.getElementById('dash-mom').innerText = isPrivacyMode ? `${sym()}••••••` : `${diff>=0?'+':''}${fmt(diff)}`;
             document.getElementById('dash-liquid').innerText = fmt(liquid);
             document.getElementById('goal-pct').innerText = Math.round(gPct)+'%';
             goalCircle.style.transition = 'none';
@@ -1239,7 +1299,7 @@
         path.setAttribute("stroke-width", "2.5"); path.setAttribute("stroke-linejoin", "round");
         svg.appendChild(path);
 
-        if (animate) {
+        if (animate && !isPrivacyMode) {
             const len = path.getTotalLength();
             path.style.strokeDasharray = len;
             path.style.strokeDashoffset = len;
@@ -1282,31 +1342,99 @@
         overlay.onmouseleave = () => { trackerLine.style.display = 'none'; trackerCircle.style.display = 'none'; tooltip.classList.remove('show'); };
     }
 
-    function exportData() {
-        const json = JSON.stringify({ assets: db, goals, currency }, null, 2);
-        const blob = new Blob([json], {type: 'application/json'});
-        const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `Backup_${new Date().toISOString().split('T')[0]}.json`; a.click();
+    // ==========================================
+    // 5. ENCRYPTED EXPORT & SMART IMPORT
+    // ==========================================
+    async function exportData() {
+        if (!db.length) return alert("No data available to export.");
+
+        let password = syncConfig.password;
+        if (!password) {
+            password = prompt("Enter your Master Passphrase to encrypt this backup file:");
+            if (!password) return;
+        }
+
+        try {
+            const payload = JSON.stringify({ assets: db, goals, currency }, null, 2);
+            const encryptedPayload = await CryptoService.encrypt(payload, password);
+            encryptedPayload.encrypted = true;
+
+            const jsonString = JSON.stringify(encryptedPayload, null, 2);
+            const blob = new Blob([jsonString], { type: 'application/json' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = `Finance_Vault_Backup_${new Date().toISOString().split('T')[0]}.enc.json`;
+            a.click();
+            URL.revokeObjectURL(a.href);
+        } catch (err) {
+            console.error("Export failed:", err);
+            alert("Failed to encrypt backup file: " + err.message);
+        }
     }
     
-    function importData(e) {
-        if(!e.target.files[0]) return;
+    async function importData(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
         const reader = new FileReader();
-        reader.onload = (ev) => { 
+        reader.onload = async (ev) => { 
             try {
-                const data = JSON.parse(ev.target.result);
-                if(data.assets) { db = data.assets; goals = data.goals||goals; currency = data.currency||currency; } 
-                else { db = data; }
-                saveState(); // Saves locally & auto-encrypts to Gist if connected!
+                const parsed = JSON.parse(ev.target.result);
+                let finalData = null;
+
+                if (parsed.salt && parsed.iv && parsed.data) {
+                    let password = syncConfig.password;
+                    if (!password) {
+                        password = prompt("This backup is encrypted. Enter the Master Passphrase to decrypt:");
+                        if (!password) {
+                            e.target.value = '';
+                            return;
+                        }
+                    }
+
+                    try {
+                        const decryptedStr = await CryptoService.decrypt(parsed, password);
+                        finalData = JSON.parse(decryptedStr);
+                        if (!syncConfig.password) {
+                            syncConfig.password = password;
+                        }
+                    } catch (decryptErr) {
+                        alert("❌ Decryption failed: Incorrect Master Passphrase or corrupted file.");
+                        e.target.value = '';
+                        return;
+                    }
+                } else {
+                    finalData = parsed;
+                }
+
+                if (finalData.assets) { 
+                    db = finalData.assets; 
+                    goals = finalData.goals || goals; 
+                    currency = finalData.currency || currency; 
+                } else if (Array.isArray(finalData)) { 
+                    db = finalData; 
+                } else {
+                    throw new Error("Unrecognized data structure");
+                }
+
+                saveState();
                 updateFilters(); 
                 document.getElementById('currency-select').value = currency; 
                 refreshView();
-                alert("Data imported successfully and encrypted to your cloud vault!");
-            } catch(err) { alert("Invalid file format"); }
+                
+                alert("✅ Encrypted backup imported and loaded successfully!");
+            } catch (err) { 
+                console.error(err);
+                alert("Invalid file format: " + err.message); 
+            }
             e.target.value = '';
         };
-        reader.readAsText(e.target.files[0]);
+        reader.readAsText(file);
     }
 
+    // ==========================================
+    // 6. PDF EXPORT (ALWAYS EXPORTS REAL NUMBERS)
+    // ==========================================
     function downloadBasicStatement() {
         if (db.length === 0) return alert("No data to generate statement.");
         const latestMap = {};
@@ -1327,14 +1455,14 @@
                 <h2 style="font-size: 16px; margin-bottom: 15px; font-weight: 700; text-transform: uppercase;">Bank Accounts & Deposits</h2>
                 <table style="width: 100%; border-collapse: collapse; margin-bottom: 40px; font-size: 14px;">
                     <thead><tr><th style="border-bottom: 2px solid #000; padding: 12px; text-align: left;">Account Name</th><th style="border-bottom: 2px solid #000; padding: 12px; text-align: left;">Category</th><th style="border-bottom: 2px solid #000; padding: 12px; text-align: right;">Balance</th></tr></thead>
-                    <tbody>${bankAssets.map(a => `<tr><td style="border-bottom:1px solid #ddd; padding:12px;">${a.name}</td><td style="border-bottom:1px solid #ddd; padding:12px; color:#666;">${a.type}</td><td style="border-bottom:1px solid #ddd; padding:12px; text-align:right; font-weight:600;">${fmt(a.val)}</td></tr>`).join('')}</tbody>
-                    <tfoot><tr><th colspan="2" style="border-top: 2px solid #000; padding: 15px 12px; text-align: right;">Total Bank Balance</th><th style="border-top: 2px solid #000; padding: 15px 12px; text-align: right;">${fmt(bankTotal)}</th></tr></tfoot>
+                    <tbody>${bankAssets.map(a => `<tr><td style="border-bottom:1px solid #ddd; padding:12px;">${a.name}</td><td style="border-bottom:1px solid #ddd; padding:12px; color:#666;">${a.type}</td><td style="border-bottom:1px solid #ddd; padding:12px; text-align:right; font-weight:600;">${fmt(a.val, true)}</td></tr>`).join('')}</tbody>
+                    <tfoot><tr><th colspan="2" style="border-top: 2px solid #000; padding: 15px 12px; text-align: right;">Total Bank Balance</th><th style="border-top: 2px solid #000; padding: 15px 12px; text-align: right;">${fmt(bankTotal, true)}</th></tr></tfoot>
                 </table>
                 <h2 style="font-size: 16px; margin-bottom: 15px; font-weight: 700; text-transform: uppercase;">Investment Details</h2>
                 <table style="width: 100%; border-collapse: collapse; margin-bottom: 40px; font-size: 14px;">
                     <thead><tr><th style="border-bottom: 2px solid #000; padding: 12px; text-align: left;">Asset Name</th><th style="border-bottom: 2px solid #000; padding: 12px; text-align: left;">Type</th><th style="border-bottom: 2px solid #000; padding: 12px; text-align: right;">Qty</th><th style="border-bottom: 2px solid #000; padding: 12px; text-align: right;">Total Value</th></tr></thead>
-                    <tbody>${investAssets.map(a => `<tr><td style="border-bottom:1px solid #ddd; padding:12px;">${a.name}</td><td style="border-bottom:1px solid #ddd; padding:12px; color:#666;">${a.type}</td><td style="border-bottom:1px solid #ddd; padding:12px; text-align:right;">${a.qty || '--'}</td><td style="border-bottom:1px solid #ddd; padding:12px; text-align:right; font-weight:600;">${fmt(a.val)}</td></tr>`).join('')}</tbody>
-                    <tfoot><tr><th colspan="3" style="border-top: 2px solid #000; padding: 15px 12px; text-align: right;">Total Investment Balance</th><th style="border-top: 2px solid #000; padding: 15px 12px; text-align: right;">${fmt(investTotal)}</th></tr></tfoot>
+                    <tbody>${investAssets.map(a => `<tr><td style="border-bottom:1px solid #ddd; padding:12px;">${a.name}</td><td style="border-bottom:1px solid #ddd; padding:12px; color:#666;">${a.type}</td><td style="border-bottom:1px solid #ddd; padding:12px; text-align:right;">${a.qty || '--'}</td><td style="border-bottom:1px solid #ddd; padding:12px; text-align:right; font-weight:600;">${fmt(a.val, true)}</td></tr>`).join('')}</tbody>
+                    <tfoot><tr><th colspan="3" style="border-top: 2px solid #000; padding: 15px 12px; text-align: right;">Total Investment Balance</th><th style="border-top: 2px solid #000; padding: 15px 12px; text-align: right;">${fmt(investTotal, true)}</th></tr></tfoot>
                 </table>
             </div>`;
         html2pdf().set({ margin: 15, filename: `Basic_Statement_${new Date().toISOString().split('T')[0]}.pdf`, image: { type: 'jpeg', quality: 1.0 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } }).from(htmlContent).save();
@@ -1345,8 +1473,6 @@
         const active = getLatest();
         const totalNW = active.reduce((s, a) => s + a.val, 0);
         const liquid = active.filter(a => a.type === 'Cash' || a.isLiquid).reduce((s, a) => s + a.val, 0);
-        const investments = active.filter(a => ['Stocks', 'RRSP', 'Crypto'].includes(a.type));
-        const totalInv = investments.reduce((s,a) => s+a.val, 0);
 
         let html = `
         <div style="width: 800px; padding: 40px; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #111; background: #fff;">
@@ -1355,27 +1481,27 @@
                 <p style="color: #64748B; font-size: 14px; margin-top: 8px;">Generated on: ${new Date().toLocaleString()}</p>
             </div>
             <div style="display: flex; justify-content: space-between; margin-bottom: 50px;">
-                <div><p style="font-size: 12px; font-weight: 700; color: #64748B; text-transform: uppercase;">Total Net Worth</p><p style="font-size: 36px; font-weight: 800; color: #0F172A; margin: 0;">${fmt(totalNW)}</p></div>
-                <div style="text-align: right;"><p style="font-size: 12px; font-weight: 700; color: #64748B; text-transform: uppercase;">Liquid Reserves</p><p style="font-size: 28px; font-weight: 800; color: #0F172A; margin: 0;">${fmt(liquid)}</p></div>
+                <div><p style="font-size: 12px; font-weight: 700; color: #64748B; text-transform: uppercase;">Total Net Worth</p><p style="font-size: 36px; font-weight: 800; color: #0F172A; margin: 0;">${fmt(totalNW, true)}</p></div>
+                <div style="text-align: right;"><p style="font-size: 12px; font-weight: 700; color: #64748B; text-transform: uppercase;">Liquid Reserves</p><p style="font-size: 28px; font-weight: 800; color: #0F172A; margin: 0;">${fmt(liquid, true)}</p></div>
             </div>
             <h2 style="font-size: 18px; color: #0F172A; border-bottom: 1px solid #E2E8F0; padding-bottom: 10px; margin-bottom: 20px;">Asset Holdings Summary</h2>
             <table style="width: 100%; border-collapse: collapse; margin-bottom: 40px; font-size: 14px;">
                 <thead><tr><th style="text-align:left; padding:12px; background:#F1F5F9;">Asset Name</th><th style="text-align:left; padding:12px; background:#F1F5F9;">Type</th><th style="text-align:right; padding:12px; background:#F1F5F9;">Value</th></tr></thead>
-                <tbody>${active.map(a => `<tr><td style="padding:12px; border-bottom:1px solid #E2E8F0; font-weight:bold;">${a.name}</td><td style="padding:12px; border-bottom:1px solid #E2E8F0; color:#64748B;">${a.type}</td><td style="padding:12px; border-bottom:1px solid #E2E8F0; text-align:right;">${fmt(a.val)}</td></tr>`).join('')}</tbody>
+                <tbody>${active.map(a => `<tr><td style="padding:12px; border-bottom:1px solid #E2E8F0; font-weight:bold;">${a.name}</td><td style="padding:12px; border-bottom:1px solid #E2E8F0; color:#64748B;">${a.type}</td><td style="padding:12px; border-bottom:1px solid #E2E8F0; text-align:right;">${fmt(a.val, true)}</td></tr>`).join('')}</tbody>
             </table>
         </div>`;
         html2pdf().set({ margin: 10, filename: `Executive_Detailed_Report_${new Date().toISOString().split('T')[0]}.pdf`, image: { type: 'jpeg', quality: 1.0 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } }).from(html).save();
     }
 
     // ==========================================
-    // 4. APP INITIALIZATION & AUTO-SYNC
+    // 7. APP INITIALIZATION & AUTO-SYNC
     // ==========================================
     window.onload = async () => {
         document.getElementById('currency-select').value = currency;
+        updatePrivacyUI();
         updateFilters(); 
         refreshView();
 
-        // Check cloud connection on load
         if (syncConfig.token && syncConfig.gistId) {
             if (syncConfig.password) {
                 await pullFromGist(false);
