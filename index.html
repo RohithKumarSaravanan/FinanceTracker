@@ -49,14 +49,14 @@
             display: none;
             justify-content: space-between;
             align-items: center;
-            padding: 15px 20px;
+            padding: 12px 16px;
             background: var(--pearl-card);
             border-bottom: 1px solid var(--silver-200);
             position: fixed; top: 0; left: 0; right: 0;
             z-index: 40;
             box-shadow: 0 2px 10px rgba(0,0,0,0.05);
         }
-        .mobile-header .logo { margin: 0; font-size: 20px; }
+        .mobile-header .logo { margin: 0; font-size: 19px; }
         .hamburger-btn, .icon-btn {
             background: none; border: none; color: var(--charcoal-900); cursor: pointer;
             display: flex; align-items: center; justify-content: center;
@@ -120,6 +120,47 @@
             cursor: pointer; transition: 0.2s; width: 100%; text-align: center;
         }
         .btn-secondary:hover { background: var(--silver-200); }
+
+        /* LIVE CAD TO INR FX BADGE */
+        .fx-badge {
+            background: var(--pearl-card);
+            border: 1px solid var(--silver-200);
+            padding: 8px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--charcoal-900);
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+            user-select: none;
+        }
+        .fx-badge:hover {
+            background: var(--silver-100);
+            border-color: var(--charcoal-900);
+            transform: translateY(-1px);
+        }
+        .fx-pulse-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #10B981;
+            display: inline-block;
+            box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+            animation: pulseRing 2s infinite;
+        }
+        @keyframes pulseRing {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+        .fx-badge.loading .fx-pulse-dot {
+            background: #F59E0B;
+            animation: pulseRing 0.7s infinite;
+        }
 
         /* PRIVACY / HIDE BUTTON */
         .btn-privacy {
@@ -185,6 +226,88 @@
         .asset-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
         .asset-icon { width: 40px; height: 40px; background: var(--silver-100); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 800; color: var(--charcoal-900); font-size: 16px; flex-shrink: 0;}
         .asset-val { font-size: 24px; font-weight: 800; letter-spacing: -1px; color: var(--charcoal-900); }
+
+        /* BANK ACCOUNTS GROUPED CONTAINER */
+        .bank-groups-layout {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+            gap: 24px;
+        }
+        .bank-group-card {
+            background: var(--pearl-card);
+            border-radius: var(--radius-lg);
+            border: 1.5px solid var(--silver-200);
+            box-shadow: var(--shadow-bento);
+            padding: 26px 22px;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.25s, box-shadow 0.25s;
+        }
+        .bank-group-card:hover {
+            box-shadow: 0 12px 30px -10px rgba(15, 23, 42, 0.12);
+        }
+        .bank-group-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 22px;
+            padding-bottom: 14px;
+            border-bottom: 1.5px dashed var(--silver-200);
+        }
+        .bank-group-title {
+            font-size: 19px;
+            font-weight: 800;
+            color: var(--charcoal-900);
+            letter-spacing: -0.5px;
+        }
+        .bank-group-total {
+            font-size: 16px;
+            font-weight: 800;
+            color: var(--charcoal-800);
+            font-variant-numeric: tabular-nums;
+        }
+        .bank-sub-list {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+        .bank-sub-card {
+            background: var(--silver-100);
+            border: 1.5px solid var(--silver-200);
+            border-radius: var(--radius-md);
+            padding: 18px 20px;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .bank-sub-card:hover {
+            background: var(--pearl-card);
+            border-color: var(--charcoal-900);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 18px rgba(15, 23, 42, 0.08);
+        }
+        .bank-sub-name {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--charcoal-900);
+            margin-bottom: 4px;
+        }
+        .bank-sub-meta {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .bank-sub-val {
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--charcoal-900);
+            font-variant-numeric: tabular-nums;
+            text-align: right;
+        }
 
         .data-row {
             display: flex; justify-content: space-between; align-items: center; padding: 16px 20px;
@@ -271,7 +394,7 @@
             .span-2x2, .span-2x1, .span-1x2 { grid-column: span 1; grid-row: span 1; }
             .bento-value { font-size: 38px; }
             .page-title { font-size: 28px; }
-            .asset-grid { grid-template-columns: 1fr; }
+            .asset-grid, .bank-groups-layout { grid-template-columns: 1fr; }
             .slide-over { width: 100%; right: -100%; padding: 30px 20px; }
             .data-row { flex-direction: column; align-items: flex-start; gap: 15px; }
             .row-right { text-align: left; width: 100%; display: flex; justify-content: space-between; align-items: center; }
@@ -285,7 +408,12 @@
 <!-- MOBILE HEADER -->
 <div class="mobile-header">
     <div class="logo">Executive<span>Bento</span></div>
-    <div style="display:flex; align-items:center; gap:12px;">
+    <div style="display:flex; align-items:center; gap:8px;">
+        <!-- MOBILE CAD TO INR BADGE -->
+        <div class="fx-badge" id="mobile-cad-inr-badge" onclick="fetchCadInrRate(true)" style="padding:6px 10px; font-size:11px;" title="Click to refresh CAD to INR">
+            <span class="fx-pulse-dot"></span>
+            <span id="mobile-cad-inr-text">CAD/INR ...</span>
+        </div>
         <button class="icon-btn" onclick="togglePrivacyMode()" title="Toggle Privacy" style="font-size:18px;">
             <span id="mobile-privacy-icon">👁️</span>
         </button>
@@ -304,6 +432,10 @@
     <div class="nav-item active" onclick="navTo('overview', this)">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9"></rect><rect x="14" y="3" width="7" height="5"></rect><rect x="14" y="12" width="7" height="9"></rect><rect x="3" y="16" width="7" height="5"></rect></svg>
         Overview
+    </div>
+    <div class="nav-item" onclick="navTo('banks', this)">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M3 10h18M5 10v11M9 10v11M15 10v11M19 10v11M12 2L2 7h20L12 2z"/></svg>
+        Bank Accounts
     </div>
     <div class="nav-item" onclick="navTo('investments', this)">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
@@ -358,11 +490,18 @@
                 <h1 class="page-title">Command Center</h1>
                 <p style="color:var(--text-muted); font-weight:600;">Your financial bento grid.</p>
             </div>
-            <!-- PRIVACY TOGGLE BUTTON -->
-            <button class="btn-privacy" id="privacy-btn" onclick="togglePrivacyMode()">
-                <span id="privacy-icon">👁️</span>
-                <span id="privacy-label">Hide Balances</span>
-            </button>
+            
+            <!-- TOP RIGHT ACTIONS: CAD TO INR BADGE + PRIVACY TOGGLE BUTTON -->
+            <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+                <div class="fx-badge" id="cad-inr-badge" onclick="fetchCadInrRate(true)" title="Daily European Central Bank conversion rate via Frankfurter. Click to refresh.">
+                    <span class="fx-pulse-dot"></span>
+                    <span id="cad-inr-rate-text">1 CAD = ₹--</span>
+                </div>
+                <button class="btn-privacy" id="privacy-btn" onclick="togglePrivacyMode()">
+                    <span id="privacy-icon">👁️</span>
+                    <span id="privacy-label">Hide Balances</span>
+                </button>
+            </div>
         </div>
         
         <div class="bento-grid">
@@ -420,13 +559,41 @@
         </div>
     </div>
 
+    <!-- BANK ACCOUNTS -->
+    <div id="banks" class="page">
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">Bank Accounts</h1>
+                <p style="color:var(--text-muted); font-weight:600;">Chequing, savings, and credit accounts organized by financial institution.</p>
+            </div>
+            <div style="display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
+                <div class="fx-badge" onclick="fetchCadInrRate(true)" title="Daily European Central Bank conversion rate via Frankfurter. Click to refresh.">
+                    <span class="fx-pulse-dot"></span>
+                    <span class="cad-inr-sync-text">1 CAD = ₹--</span>
+                </div>
+                <div style="text-align:right;">
+                    <div class="bento-label">Total Liquid Cash</div>
+                    <div class="bento-value" style="font-size:32px; margin-top:0;" id="bank-total">C$0</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bank-groups-layout" id="bank-groups-container"></div>
+    </div>
+
     <!-- INVESTMENTS -->
     <div id="investments" class="page">
         <div class="page-header">
             <div><h1 class="page-title">Investment Holdings</h1><p style="color:var(--text-muted); font-weight:600;">Stocks, ETFs, RRSP & Crypto.</p></div>
-            <div style="text-align:right;">
-                <div class="bento-label">Total Invested</div>
-                <div class="bento-value" style="font-size:32px; margin-top:0;" id="inv-total">C$0</div>
+            <div style="display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
+                <div class="fx-badge" onclick="fetchCadInrRate(true)" title="Daily European Central Bank conversion rate via Frankfurter. Click to refresh.">
+                    <span class="fx-pulse-dot"></span>
+                    <span class="cad-inr-sync-text">1 CAD = ₹--</span>
+                </div>
+                <div style="text-align:right;">
+                    <div class="bento-label">Total Invested</div>
+                    <div class="bento-value" style="font-size:32px; margin-top:0;" id="inv-total">C$0</div>
+                </div>
             </div>
         </div>
         
@@ -447,9 +614,15 @@
     <div id="fds" class="page">
         <div class="page-header">
             <div><h1 class="page-title">Fixed Deposits</h1><p style="color:var(--text-muted); font-weight:600;">Guaranteed returns and maturity timelines.</p></div>
-            <div style="text-align:right;">
-                <div class="bento-label">Value at Maturity</div>
-                <div class="bento-value" style="font-size:32px; margin-top:0; color:#10B981;" id="fd-mat-total">C$0</div>
+            <div style="display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
+                <div class="fx-badge" onclick="fetchCadInrRate(true)" title="Daily European Central Bank conversion rate via Frankfurter. Click to refresh.">
+                    <span class="fx-pulse-dot"></span>
+                    <span class="cad-inr-sync-text">1 CAD = ₹--</span>
+                </div>
+                <div style="text-align:right;">
+                    <div class="bento-label">Value at Maturity</div>
+                    <div class="bento-value" style="font-size:32px; margin-top:0; color:#10B981;" id="fd-mat-total">C$0</div>
+                </div>
             </div>
         </div>
 
@@ -485,13 +658,14 @@
 
     <div class="form-group">
         <span class="form-label">Asset Name</span>
-        <input type="text" id="in-name" placeholder="e.g. S&P 500 Index">
+        <input type="text" id="in-name" placeholder="e.g. WealthSimple Chequing or CIBC Savings">
     </div>
     
     <div class="form-group">
         <span class="form-label">Asset Category</span>
         <select id="in-type" onchange="toggleFormFields()">
             <option value="Cash">Cash / Bank Account</option>
+            <option value="Credit Card">Credit Card</option>
             <option value="FD">Fixed Deposit</option>
             <option value="Stocks">Stocks / ETFs</option>
             <option value="RRSP">RRSP</option>
@@ -516,7 +690,7 @@
 
     <div class="form-group">
         <span class="form-label">Total Current Value</span>
-        <input type="number" id="in-val" placeholder="0.00" style="font-size:20px; font-weight:800;">
+        <input type="number" id="in-val" placeholder="0.00" step="any" style="font-size:20px; font-weight:800;">
     </div>
     
     <div class="form-group">
@@ -635,7 +809,81 @@
     }
 
     // ==========================================
-    // 2. CRYPTO ENGINE (Web Crypto API: AES-256-GCM + PBKDF2)
+    // 2. LIVE CAD -> INR CONVERSION ENGINE (Frankfurter API)
+    // ==========================================
+    async function fetchCadInrRate(force = false) {
+        const cachedRate = localStorage.getItem('nexus_cad_inr_rate');
+        const cachedTime = localStorage.getItem('nexus_cad_inr_time');
+        const cachedDate = localStorage.getItem('nexus_cad_inr_date');
+
+        const now = Date.now();
+        // Frankfurter updates once per working day around 16:00 CET.
+        // We consider cache fresh for 6 hours unless user explicitly clicks to force refresh.
+        const isStale = !cachedTime || (now - parseInt(cachedTime, 10) > 6 * 60 * 60 * 1000);
+
+        if (cachedRate) {
+            updateCadInrUI(parseFloat(cachedRate), cachedDate);
+        }
+
+        if (!force && !isStale && cachedRate) {
+            return;
+        }
+
+        setCadInrBadgeLoading(true);
+
+        try {
+            let res;
+            try {
+                res = await fetch('https://api.frankfurter.dev/v1/latest?from=CAD&to=INR');
+            } catch (netErr) {
+                // Fallback to .app endpoint if .dev has transient DNS/CORS issue
+                res = await fetch('https://api.frankfurter.app/latest?from=CAD&to=INR');
+            }
+
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const data = await res.json();
+
+            if (data && data.rates && data.rates.INR) {
+                const rate = data.rates.INR;
+                const rateDate = data.date || new Date().toISOString().split('T')[0];
+                localStorage.setItem('nexus_cad_inr_rate', rate);
+                localStorage.setItem('nexus_cad_inr_time', now.toString());
+                localStorage.setItem('nexus_cad_inr_date', rateDate);
+                updateCadInrUI(rate, rateDate);
+            }
+        } catch (err) {
+            console.warn('CAD to INR conversion fetch warning:', err);
+            if (cachedRate) {
+                updateCadInrUI(parseFloat(cachedRate), cachedDate || 'Cached');
+            }
+        } finally {
+            setCadInrBadgeLoading(false);
+        }
+    }
+
+    function setCadInrBadgeLoading(isLoading) {
+        document.querySelectorAll('.fx-badge').forEach(b => {
+            if (isLoading) b.classList.add('loading');
+            else b.classList.remove('loading');
+        });
+    }
+
+    function updateCadInrUI(rate, date) {
+        const rateFormatted = Number(rate).toFixed(2);
+        const textStr = `1 CAD = ₹${rateFormatted}`;
+        const titleStr = `Daily European Central Bank fix (${date || 'Today'}). Click to refresh.`;
+
+        const deskText = document.getElementById('cad-inr-rate-text');
+        const mobText = document.getElementById('mobile-cad-inr-text');
+        if (deskText) deskText.innerText = textStr;
+        if (mobText) mobText.innerText = textStr;
+
+        document.querySelectorAll('.cad-inr-sync-text').forEach(el => el.innerText = textStr);
+        document.querySelectorAll('.fx-badge').forEach(el => el.setAttribute('title', titleStr));
+    }
+
+    // ==========================================
+    // 3. CRYPTO ENGINE (AES-256-GCM + PBKDF2)
     // ==========================================
     const CryptoService = {
         bufToBase64(buf) {
@@ -692,7 +940,7 @@
     };
 
     // ==========================================
-    // 3. GIST SYNC SERVICE
+    // 4. GIST SYNC SERVICE
     // ==========================================
     let syncConfig = {
         token: localStorage.getItem('nexus_sync_token') || '',
@@ -832,7 +1080,7 @@
     }
 
     // ==========================================
-    // 4. CORE APP STATE & FORMATTING
+    // 5. CORE APP STATE, SMART PARSER & FORMATTING
     // ==========================================
     let db = JSON.parse(localStorage.getItem('nexus_vision_db')) || [];
     let goals = JSON.parse(localStorage.getItem('nexus_vision_goals')) || [10000, 50000, 100000, 250000];
@@ -854,6 +1102,48 @@
     };
     
     const chartColors = ['#0F172A', '#3B82F6', '#10B981', '#8B5CF6', '#F59E0B', '#14B8A6', '#64748B'];
+
+    // SMART BANK & ACCOUNT NAME PARSER
+    function parseBankAndAccount(fullName) {
+        const str = (fullName || '').trim();
+        
+        const institutions = [
+            'WealthSimple', 'Wealthsimple',
+            'PC Financial', 'President\'s Choice',
+            'CIBC', 'RBC', 'TD', 'BMO', 'Scotiabank', 'Scotia',
+            'Amex', 'American Express',
+            'Tangerine', 'Simplii', 'EQ Bank', 'National Bank', 'Desjardins'
+        ];
+
+        for (const inst of institutions) {
+            const pattern = new RegExp(`^${inst}\\b[\\s-_:]*`, 'i');
+            if (pattern.test(str)) {
+                let remainder = str.replace(pattern, '').trim();
+                let subName = remainder || 'Main Account';
+                
+                if (/^chequing$/i.test(subName)) subName = 'Chequing Account';
+                if (/^savings$/i.test(subName)) subName = 'Savings Account';
+                if (/^credit\s*card$/i.test(subName)) subName = 'Credit Card';
+
+                let normInst = inst;
+                if (/^wealthsimple$/i.test(inst)) normInst = 'WealthSimple';
+                if (/^pc financial$/i.test(inst)) normInst = 'PC Financial';
+                if (/^amex$/i.test(inst)) normInst = 'Amex';
+
+                return { bank: normInst, account: subName };
+            }
+        }
+
+        const suffixMatch = str.match(/^(.+?)\s+(Chequing|Savings|Credit Card|Account|Checking)$/i);
+        if (suffixMatch) {
+            let sub = suffixMatch[2];
+            if (/chequing/i.test(sub)) sub = 'Chequing Account';
+            if (/savings/i.test(sub)) sub = 'Savings Account';
+            return { bank: suffixMatch[1].trim(), account: sub };
+        }
+
+        return { bank: str, account: 'Primary Account' };
+    }
 
     function saveState() { 
         localStorage.setItem('nexus_vision_db', JSON.stringify(db));
@@ -884,6 +1174,7 @@
 
     function refreshView() {
         if(document.getElementById('overview').classList.contains('active')) renderOverview();
+        if(document.getElementById('banks').classList.contains('active')) renderBankAccounts();
         if(document.getElementById('investments').classList.contains('active')) renderInvestments();
         if(document.getElementById('fds').classList.contains('active')) renderFDs();
         if(document.getElementById('ledger').classList.contains('active')) renderManage();
@@ -1049,7 +1340,7 @@
         document.getElementById('det-icon').innerText = name[0];
         document.getElementById('det-val').innerText = fmt(curr.val);
         
-        const pct = (((curr.val - hist[0].val)/hist[0].val)*100).toFixed(1);
+        const pct = (((curr.val - hist[0].val)/(hist[0].val || 1))*100).toFixed(1);
         const pEl = document.getElementById('det-perf');
         pEl.innerText = `${pct>=0?'+':''}${pct}% Lifetime`;
         pEl.style.color = pct>=0?'#10B981':'#EF4444';
@@ -1160,6 +1451,71 @@
         drawSparkline(db, 'spark-nw', '#10B981', animate);
         initialLoad = false;
         isAnimatingNW = false;
+    }
+
+    // ==========================================
+    // 6. BANK ACCOUNTS RENDERER
+    // ==========================================
+    function renderBankAccounts() {
+        const container = document.getElementById('bank-groups-container');
+        container.innerHTML = '';
+
+        const bankTypes = ['Cash', 'Credit Card'];
+        const bankAssets = getLatest().filter(a => bankTypes.includes(a.type) || (!['Stocks', 'RRSP', 'Crypto', 'FD'].includes(a.type)));
+        
+        const totalCash = bankAssets.reduce((sum, a) => sum + a.val, 0);
+        document.getElementById('bank-total').innerText = fmt(totalCash);
+
+        if (!bankAssets.length) {
+            container.innerHTML = '<div class="empty-state" style="grid-column: 1/-1;">No bank accounts logged yet. Click "Add Record" to start.</div>';
+            return;
+        }
+
+        const groups = {};
+        bankAssets.forEach(a => {
+            const parsed = parseBankAndAccount(a.name);
+            const bankName = parsed.bank;
+            if (!groups[bankName]) groups[bankName] = [];
+            groups[bankName].push({ ...a, subTitle: parsed.account });
+        });
+
+        Object.keys(groups).sort().forEach(bankName => {
+            const items = groups[bankName];
+            const groupSum = items.reduce((s, it) => s + it.val, 0);
+
+            let groupHTML = `
+                <div class="bank-group-card">
+                    <div class="bank-group-header">
+                        <div>
+                            <div class="bank-group-title">${bankName} Bank Accounts</div>
+                            <div style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase; margin-top:2px;">
+                                ${items.length} ${items.length === 1 ? 'Account' : 'Accounts'}
+                            </div>
+                        </div>
+                        <div class="bank-group-total">${fmt(groupSum)}</div>
+                    </div>
+                    <div class="bank-sub-list">
+            `;
+
+            items.forEach(acc => {
+                groupHTML += `
+                    <div class="bank-sub-card" onclick="openDetail('${acc.name}')" title="Click to view history">
+                        <div>
+                            <div class="bank-sub-name">${acc.subTitle}</div>
+                            <div class="bank-sub-meta">${acc.type}${acc.isLiquid ? ' • Liquid Cash' : ''}</div>
+                        </div>
+                        <div class="bank-sub-val">${fmt(acc.val)}</div>
+                    </div>
+                `;
+            });
+
+            groupHTML += `
+                    </div>
+                </div>
+            `;
+
+            container.innerHTML += groupHTML;
+        });
     }
 
     function renderInvestments() {
@@ -1343,7 +1699,7 @@
     }
 
     // ==========================================
-    // 5. ENCRYPTED EXPORT & SMART IMPORT
+    // 7. ENCRYPTED EXPORT & SMART IMPORT
     // ==========================================
     async function exportData() {
         if (!db.length) return alert("No data available to export.");
@@ -1433,7 +1789,7 @@
     }
 
     // ==========================================
-    // 6. PDF EXPORT (ALWAYS EXPORTS REAL NUMBERS)
+    // 8. PDF STATEMENTS & REPORTS
     // ==========================================
     function downloadBasicStatement() {
         if (db.length === 0) return alert("No data to generate statement.");
@@ -1441,7 +1797,7 @@
         db.forEach(e => { if(!latestMap[e.name] || new Date(e.date) >= new Date(latestMap[e.name].date)) latestMap[e.name] = e; });
         const activeAssets = Object.values(latestMap).sort((a,b) => b.val - a.val);
 
-        const bankAssets = activeAssets.filter(a => a.type === 'Cash' || a.type === 'FD');
+        const bankAssets = activeAssets.filter(a => a.type === 'Cash' || a.type === 'FD' || a.type === 'Credit Card' || (!['Stocks', 'RRSP', 'Crypto'].includes(a.type)));
         const bankTotal = bankAssets.reduce((sum, a) => sum + a.val, 0);
         const investAssets = activeAssets.filter(a => a.type === 'Stocks' || a.type === 'RRSP' || a.type === 'Crypto');
         const investTotal = investAssets.reduce((sum, a) => sum + a.val, 0);
@@ -1494,13 +1850,21 @@
     }
 
     // ==========================================
-    // 7. APP INITIALIZATION & AUTO-SYNC
+    // 9. APP INITIALIZATION & AUTO-SYNC
     // ==========================================
     window.onload = async () => {
         document.getElementById('currency-select').value = currency;
         updatePrivacyUI();
         updateFilters(); 
         refreshView();
+
+        // Fetch Live CAD -> INR rate with smart daily refresh & caching
+        fetchCadInrRate(false);
+
+        // Periodically verify if ECB published a new daily rate
+        setInterval(() => {
+            fetchCadInrRate(false);
+        }, 60 * 60 * 1000);
 
         if (syncConfig.token && syncConfig.gistId) {
             if (syncConfig.password) {
