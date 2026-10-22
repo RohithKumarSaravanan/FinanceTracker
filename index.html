@@ -265,6 +265,9 @@
             font-weight: 800;
             color: var(--charcoal-800);
             font-variant-numeric: tabular-nums;
+            display: inline-flex;
+            align-items: baseline;
+            gap: 6px;
         }
         .bank-sub-list {
             display: flex;
@@ -607,7 +610,8 @@
             </div>
         </div>
 
-        <div class="asset-grid" id="inv-grid"></div>
+        <!-- TWO LINE SECTIONS: RRSP THEN STOCKS & OTHER INVESTMENTS -->
+        <div id="inv-grid" style="display:flex; flex-direction:column; gap:26px;"></div>
     </div>
 
     <!-- FIXED DEPOSITS -->
@@ -817,8 +821,6 @@
         const cachedDate = localStorage.getItem('nexus_cad_inr_date');
 
         const now = Date.now();
-        // Frankfurter updates once per working day around 16:00 CET.
-        // We consider cache fresh for 6 hours unless user explicitly clicks to force refresh.
         const isStale = !cachedTime || (now - parseInt(cachedTime, 10) > 6 * 60 * 60 * 1000);
 
         if (cachedRate) {
@@ -836,7 +838,6 @@
             try {
                 res = await fetch('https://api.frankfurter.dev/v1/latest?from=CAD&to=INR');
             } catch (netErr) {
-                // Fallback to .app endpoint if .dev has transient DNS/CORS issue
                 res = await fetch('https://api.frankfurter.app/latest?from=CAD&to=INR');
             }
 
@@ -1154,12 +1155,29 @@
     
     function setCurrency(val) { currency = val; saveState(); refreshView(); }
     
+    // PERSIST ACTIVE PAGE ACROSS RELOADS
     function navTo(pageId, el) {
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
         document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-        document.getElementById(pageId).classList.add('active');
-        if(el) el.classList.add('active');
         
+        const targetPage = document.getElementById(pageId);
+        if (targetPage) targetPage.classList.add('active');
+        
+        if (el) {
+            el.classList.add('active');
+        } else {
+            // Find and activate the matching sidebar item
+            document.querySelectorAll('.nav-item').forEach(item => {
+                const clickAttr = item.getAttribute('onclick') || '';
+                if (clickAttr.includes(`'${pageId}'`)) {
+                    item.classList.add('active');
+                }
+            });
+        }
+        
+        // Remember current page
+        localStorage.setItem('nexus_active_page', pageId);
+
         if(window.innerWidth <= 768) {
             document.getElementById('sidebar').classList.remove('open');
             document.getElementById('sidebar-overlay').classList.remove('show');
@@ -1454,7 +1472,7 @@
     }
 
     // ==========================================
-    // 6. BANK ACCOUNTS RENDERER
+    // 6. BANK ACCOUNTS RENDERER (WITH "TOTAL" LABEL)
     // ==========================================
     function renderBankAccounts() {
         const container = document.getElementById('bank-groups-container');
@@ -1492,7 +1510,10 @@
                                 ${items.length} ${items.length === 1 ? 'Account' : 'Accounts'}
                             </div>
                         </div>
-                        <div class="bank-group-total">${fmt(groupSum)}</div>
+                        <div class="bank-group-total">
+                            <span style="font-size:11px; font-weight:800; color:var(--text-muted); letter-spacing:0.5px;">TOTAL</span>
+                            <span>${fmt(groupSum)}</span>
+                        </div>
                     </div>
                     <div class="bank-sub-list">
             `;
@@ -1518,28 +1539,128 @@
         });
     }
 
+    // ==========================================
+    // 7. INVESTMENTS RENDERER (RRSP LINE + STOCKS LINE)
+    // ==========================================
     function renderInvestments() {
         const invs = getLatest().filter(a => ['Stocks', 'RRSP', 'Crypto'].includes(a.type));
-        const total = invs.reduce((s,a)=>s+a.val, 0);
+        const total = invs.reduce((s, a) => s + a.val, 0);
         document.getElementById('inv-total').innerText = fmt(total);
 
-        const grid = document.getElementById('inv-grid'); grid.innerHTML='';
-        if(!invs.length) grid.innerHTML = '<div class="empty-state">No investments logged.</div>';
+        const container = document.getElementById('inv-grid');
+        container.innerHTML = '';
         
-        invs.forEach((a, i) => {
-            const hist = db.filter(x => x.name === a.name).sort((x,y) => new Date(x.date) - new Date(y.date));
-            grid.innerHTML += `<div class="asset-card" onclick="openDetail('${a.name}')">
-                <div class="asset-header">
-                    <div style="display:flex;gap:12px;align-items:center;">
-                        <div class="asset-icon" style="background:${chartColors[i%chartColors.length]};color:#fff;">${a.name[0]}</div>
-                        <div><div style="font-weight:700;font-size:15px;color:var(--charcoal-900);">${a.name}</div><div style="font-size:12px;color:var(--text-muted);font-weight:600;">${a.qty? a.qty+' Units' : a.type}</div></div>
+        if (!invs.length) {
+            container.innerHTML = '<div class="empty-state">No investments logged.</div>';
+            drawPieAndBar(invs, total, 'inv-pie', 'inv-bar', 'inv-legend');
+            return;
+        }
+
+        const rrspItems = invs.filter(a => a.type === 'RRSP');
+        const stockItems = invs.filter(a => a.type !== 'RRSP');
+
+        const rrspTotal = rrspItems.reduce((s, a) => s + a.val, 0);
+        const stockTotal = stockItems.reduce((s, a) => s + a.val, 0);
+
+        let html = '';
+
+        // LINE 1: RRSP SECTION
+        html += `
+            <div style="width:100%;">
+                <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:14px; border-bottom:1.5px dashed var(--silver-200); padding-bottom:8px;">
+                    <div>
+                        <h3 style="font-size:18px; font-weight:800; color:var(--charcoal-900);">RRSP Holdings</h3>
+                        <div style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Registered Retirement Savings Plan</div>
+                    </div>
+                    <div style="font-size:16px; font-weight:800; color:var(--charcoal-900); display:inline-flex; align-items:baseline; gap:6px;">
+                        <span style="font-size:11px; font-weight:800; color:var(--text-muted); letter-spacing:0.5px;">TOTAL</span>
+                        <span>${fmt(rrspTotal)}</span>
                     </div>
                 </div>
-                <div class="asset-val">${fmt(a.val)}</div>
-                <div style="height:40px; margin-top:15px; position:relative;"><svg id="spark-inv-${i}" style="width:100%;height:100%;overflow:visible;"></svg></div>
-            </div>`;
-            setTimeout(() => drawSparkline(hist, `spark-inv-${i}`), 50);
-        });
+                <div class="asset-grid" id="rrsp-grid">
+                    ${rrspItems.length === 0 ? '<div class="empty-state" style="padding:20px; font-size:13px; grid-column:1/-1;">No RRSP records logged yet.</div>' : ''}
+                </div>
+            </div>
+        `;
+
+        // LINE 2: OTHER STOCKS / ETFS / CRYPTO SECTION
+        html += `
+            <div style="width:100%;">
+                <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:14px; border-bottom:1.5px dashed var(--silver-200); padding-bottom:8px;">
+                    <div>
+                        <h3 style="font-size:18px; font-weight:800; color:var(--charcoal-900);">Stocks, ETFs & Other Investments</h3>
+                        <div style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Non-RRSP / Personal Investments</div>
+                    </div>
+                    <div style="font-size:16px; font-weight:800; color:var(--charcoal-900); display:inline-flex; align-items:baseline; gap:6px;">
+                        <span style="font-size:11px; font-weight:800; color:var(--text-muted); letter-spacing:0.5px;">TOTAL</span>
+                        <span>${fmt(stockTotal)}</span>
+                    </div>
+                </div>
+                <div class="asset-grid" id="stocks-grid">
+                    ${stockItems.length === 0 ? '<div class="empty-state" style="padding:20px; font-size:13px; grid-column:1/-1;">No stocks or other investments logged yet.</div>' : ''}
+                </div>
+            </div>
+        `;
+
+        container.innerHTML = html;
+
+        // Render RRSP cards into Line 1
+        if (rrspItems.length > 0) {
+            const rrspGrid = document.getElementById('rrsp-grid');
+            rrspItems.forEach((a, i) => {
+                const hist = db.filter(x => x.name === a.name).sort((x, y) => new Date(x.date) - new Date(y.date));
+                const color = chartColors[i % chartColors.length];
+                const card = document.createElement('div');
+                card.className = 'asset-card';
+                card.onclick = () => openDetail(a.name);
+                card.innerHTML = `
+                    <div class="asset-header">
+                        <div style="display:flex; gap:12px; align-items:center;">
+                            <div class="asset-icon" style="background:${color}; color:#fff;">${a.name[0]}</div>
+                            <div>
+                                <div style="font-weight:700; font-size:15px; color:var(--charcoal-900);">${a.name}</div>
+                                <div style="font-size:12px; color:var(--text-muted); font-weight:600;">${a.qty ? a.qty + ' Units' : a.type}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="asset-val">${fmt(a.val)}</div>
+                    <div style="height:40px; margin-top:15px; position:relative;">
+                        <svg id="spark-rrsp-${i}" style="width:100%; height:100%; overflow:visible;"></svg>
+                    </div>
+                `;
+                rrspGrid.appendChild(card);
+                setTimeout(() => drawSparkline(hist, `spark-rrsp-${i}`), 50);
+            });
+        }
+
+        // Render Stocks/Other cards into Line 2
+        if (stockItems.length > 0) {
+            const stocksGrid = document.getElementById('stocks-grid');
+            stockItems.forEach((a, i) => {
+                const hist = db.filter(x => x.name === a.name).sort((x, y) => new Date(x.date) - new Date(y.date));
+                const color = chartColors[(i + rrspItems.length) % chartColors.length];
+                const card = document.createElement('div');
+                card.className = 'asset-card';
+                card.onclick = () => openDetail(a.name);
+                card.innerHTML = `
+                    <div class="asset-header">
+                        <div style="display:flex; gap:12px; align-items:center;">
+                            <div class="asset-icon" style="background:${color}; color:#fff;">${a.name[0]}</div>
+                            <div>
+                                <div style="font-weight:700; font-size:15px; color:var(--charcoal-900);">${a.name}</div>
+                                <div style="font-size:12px; color:var(--text-muted); font-weight:600;">${a.qty ? a.qty + ' Units' : a.type}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="asset-val">${fmt(a.val)}</div>
+                    <div style="height:40px; margin-top:15px; position:relative;">
+                        <svg id="spark-stock-${i}" style="width:100%; height:100%; overflow:visible;"></svg>
+                    </div>
+                `;
+                stocksGrid.appendChild(card);
+                setTimeout(() => drawSparkline(hist, `spark-stock-${i}`), 50);
+            });
+        }
 
         drawPieAndBar(invs, total, 'inv-pie', 'inv-bar', 'inv-legend');
     }
@@ -1699,7 +1820,7 @@
     }
 
     // ==========================================
-    // 7. ENCRYPTED EXPORT & SMART IMPORT
+    // 8. ENCRYPTED EXPORT & SMART IMPORT
     // ==========================================
     async function exportData() {
         if (!db.length) return alert("No data available to export.");
@@ -1789,7 +1910,7 @@
     }
 
     // ==========================================
-    // 8. PDF STATEMENTS & REPORTS
+    // 9. PDF STATEMENTS & REPORTS
     // ==========================================
     function downloadBasicStatement() {
         if (db.length === 0) return alert("No data to generate statement.");
@@ -1850,13 +1971,16 @@
     }
 
     // ==========================================
-    // 9. APP INITIALIZATION & AUTO-SYNC
+    // 10. APP INITIALIZATION & AUTO-SYNC
     // ==========================================
     window.onload = async () => {
         document.getElementById('currency-select').value = currency;
         updatePrivacyUI();
         updateFilters(); 
-        refreshView();
+
+        // Restore previously viewed tab so reload stays on the same page
+        const savedPage = localStorage.getItem('nexus_active_page') || 'overview';
+        navTo(savedPage);
 
         // Fetch Live CAD -> INR rate with smart daily refresh & caching
         fetchCadInrRate(false);
