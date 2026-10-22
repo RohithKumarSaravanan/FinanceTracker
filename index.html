@@ -1166,7 +1166,6 @@
         if (el) {
             el.classList.add('active');
         } else {
-            // Find and activate the matching sidebar item
             document.querySelectorAll('.nav-item').forEach(item => {
                 const clickAttr = item.getAttribute('onclick') || '';
                 if (clickAttr.includes(`'${pageId}'`)) {
@@ -1175,7 +1174,6 @@
             });
         }
         
-        // Remember current page
         localStorage.setItem('nexus_active_page', pageId);
 
         if(window.innerWidth <= 768) {
@@ -1274,28 +1272,70 @@
         toggleFormFields();
     }
 
+    // ==========================================
+    // SMART SNAPSHOT RECORDER & CASCADE RENAMER
+    // ==========================================
     function saveRecord() {
         const name = document.getElementById('in-name').value.trim();
         const val = parseFloat(document.getElementById('in-val').value);
         const date = document.getElementById('in-date').value;
         if(!name || isNaN(val) || !date) return alert("Name, Value, and Date are required.");
 
+        const type = document.getElementById('in-type').value;
+        const isLiquid = document.getElementById('in-liquid').checked;
+        const qty = parseFloat(document.getElementById('in-qty').value) || 0;
+        const fdNum = document.getElementById('in-fd-num').value;
+        const description = document.getElementById('in-desc').value;
+        const depDate = document.getElementById('in-dep-date').value;
+        const matDate = document.getElementById('in-mat-date').value;
+        const interest = parseFloat(document.getElementById('in-interest').value) || 0;
+        const matVal = parseFloat(document.getElementById('in-mat-val').value) || 0;
+
         const entry = {
-            id: editId || Date.now(), name, type: document.getElementById('in-type').value,
-            val, date, isLiquid: document.getElementById('in-liquid').checked,
-            qty: parseFloat(document.getElementById('in-qty').value) || 0,
-            fdNum: document.getElementById('in-fd-num').value,
-            description: document.getElementById('in-desc').value,
-            depDate: document.getElementById('in-dep-date').value,
-            matDate: document.getElementById('in-mat-date').value,
-            interest: parseFloat(document.getElementById('in-interest').value) || 0,
-            matVal: parseFloat(document.getElementById('in-mat-val').value) || 0
+            id: editId || Date.now(),
+            name,
+            type,
+            val,
+            date,
+            isLiquid,
+            qty,
+            fdNum,
+            description,
+            depDate,
+            matDate,
+            interest,
+            matVal
         };
 
-        if(editId) { const idx = db.findIndex(x => x.id === editId); if(idx>-1) db[idx] = entry; } 
-        else db.push(entry);
+        if(editId) { 
+            const idx = db.findIndex(x => x.id === editId); 
+            if(idx > -1) {
+                const oldName = db[idx].name;
+                // If the user changed the name of an existing asset
+                if(oldName && oldName !== name) {
+                    const matchCount = db.filter(x => x.name === oldName).length;
+                    const confirmRenameAll = confirm(
+                        `You changed the asset name from "${oldName}" to "${name}".\n\n` +
+                        `Do you want to update all historical snapshots (${matchCount} record${matchCount === 1 ? '' : 's'}) for this asset to the new name as well?`
+                    );
+                    if(confirmRenameAll) {
+                        db.forEach(item => {
+                            if(item.name === oldName) {
+                                item.name = name;
+                            }
+                        });
+                    }
+                }
+                db[idx] = entry;
+            }
+        } else {
+            db.push(entry);
+        }
 
-        saveState(); closeSlideOver(); updateFilters(); refreshView();
+        saveState(); 
+        closeSlideOver(); 
+        updateFilters(); 
+        refreshView();
     }
 
     function triggerEdit(id) {
@@ -1316,7 +1356,8 @@
         
         document.getElementById('form-title').innerText = "Edit Record";
         document.getElementById('btn-submit').innerText = "Update Snapshot";
-        toggleFormFields(); openSlideOver();
+        toggleFormFields(); 
+        openSlideOver();
     }
 
     function deleteRecord(id) {
