@@ -207,6 +207,7 @@
         .bento-dark .bento-label { color: var(--silver-400); }
         .bento-dark .bento-value { color: var(--text-invert); }
 
+        .span-4x1 { grid-column: 1 / -1; width: 100%; }
         .span-2x2 { grid-column: span 2; grid-row: span 2; justify-content: center; }
         .span-2x1 { grid-column: span 2; grid-row: span 1; }
         .span-1x2 { grid-column: span 1; grid-row: span 2; }
@@ -369,9 +370,9 @@
         }
         .chart-tooltip.show { opacity: 1; visibility: visible; }
 
-        .stacked-bar { width: 100%; height: 24px; border-radius: 6px; overflow: hidden; display: flex; }
-        .stacked-seg { height: 100%; border-right: 1px solid var(--pearl-card); cursor: pointer; transition: 0.2s; }
-        .stacked-seg:hover { opacity: 0.8; }
+        .stacked-bar { width: 100%; height: 26px; border-radius: 8px; overflow: hidden; display: flex; background: var(--silver-200); }
+        .stacked-seg { height: 100%; border-right: 1.5px solid var(--pearl-card); cursor: pointer; transition: opacity 0.2s; }
+        .stacked-seg:hover { opacity: 0.85; }
 
         .modal-bg { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,23,42,0.4); backdrop-filter:blur(4px); z-index: 2000; display:none; align-items:center; justify-content:center; opacity:0; transition:0.3s; }
         .modal-bg.show { opacity: 1; }
@@ -394,13 +395,14 @@
             .sidebar-close-btn { display: block; }
             .main-wrapper { height: 100vh; padding: 90px 20px 40px 20px; overflow-y: auto; }
             .bento-grid { grid-template-columns: 1fr; }
-            .span-2x2, .span-2x1, .span-1x2 { grid-column: span 1; grid-row: span 1; }
+            .span-2x2, .span-2x1, .span-1x2, .span-4x1 { grid-column: span 1; grid-row: span 1; }
             .bento-value { font-size: 38px; }
             .page-title { font-size: 28px; }
             .asset-grid, .bank-groups-layout { grid-template-columns: 1fr; }
             .slide-over { width: 100%; right: -100%; padding: 30px 20px; }
             .data-row { flex-direction: column; align-items: flex-start; gap: 15px; }
             .row-right { text-align: left; width: 100%; display: flex; justify-content: space-between; align-items: center; }
+            .inv-summary-card { flex-direction: column !important; align-items: center !important; text-align: center; }
         }
     </style>
 </head>
@@ -494,7 +496,6 @@
                 <p style="color:var(--text-muted); font-weight:600;">Your financial bento grid.</p>
             </div>
             
-            <!-- TOP RIGHT ACTIONS: CAD TO INR BADGE + PRIVACY TOGGLE BUTTON -->
             <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
                 <div class="fx-badge" id="cad-inr-badge" onclick="fetchCadInrRate(true)" title="Daily European Central Bank conversion rate via Frankfurter. Click to refresh.">
                     <span class="fx-pulse-dot"></span>
@@ -600,12 +601,15 @@
             </div>
         </div>
         
+        <!-- DYNAMIC PIE & STACKED BAR SUMMARY CARD (SPANS FULL WIDTH) -->
         <div class="bento-grid" style="grid-auto-rows: auto; margin-bottom:30px;">
-            <div class="bento-card span-4x1" style="flex-direction:row; gap:30px; align-items:center;">
-                <div style="width:120px; height:120px; flex-shrink:0;"><svg id="inv-pie" viewBox="-1.1 -1.1 2.2 2.2" width="100%" height="100%"></svg></div>
-                <div style="flex:1;">
+            <div class="bento-card span-4x1 inv-summary-card" style="flex-direction:row; gap:36px; align-items:center; padding:28px 30px;">
+                <div style="width:130px; height:130px; flex-shrink:0;">
+                    <svg id="inv-pie" viewBox="-1.1 -1.1 2.2 2.2" width="100%" height="100%"></svg>
+                </div>
+                <div style="flex:1; min-width:0; width:100%; display:flex; flex-direction:column; gap:18px;">
                     <div class="stacked-bar" id="inv-bar"></div>
-                    <div id="inv-legend" style="display:flex; flex-wrap:wrap; gap:15px; margin-top:15px; font-size:12px; font-weight:600;"></div>
+                    <div id="inv-legend" style="display:flex; flex-wrap:wrap; gap:10px 14px; font-size:12px; font-weight:600;"></div>
                 </div>
             </div>
         </div>
@@ -734,7 +738,7 @@
         </div>
 
         <label style="display:flex; align-items:center; gap:8px; cursor:pointer; margin-bottom:20px;">
-            <input type="checkbox" id="sync-remember-pwd" style="width:16px; height:16px; accent-color:var(--charcoal-900);">
+            <input type="checkbox" id="sync-remember-pwd" checked style="width:16px; height:16px; accent-color:var(--charcoal-900);">
             <span style="font-size:12px; font-weight:600; color:var(--charcoal-900);">Remember passphrase on this device</span>
         </label>
 
@@ -941,12 +945,12 @@
     };
 
     // ==========================================
-    // 4. GIST SYNC SERVICE
+    // 4. GIST SYNC SERVICE WITH PERSISTENT PASSPHRASE
     // ==========================================
     let syncConfig = {
         token: localStorage.getItem('nexus_sync_token') || '',
         gistId: localStorage.getItem('nexus_sync_gist_id') || '',
-        rememberPwd: localStorage.getItem('nexus_sync_remember_pwd') === 'true',
+        rememberPwd: localStorage.getItem('nexus_sync_remember_pwd') !== 'false',
         password: localStorage.getItem('nexus_sync_saved_pwd') || ''
     };
 
@@ -962,6 +966,11 @@
             updateSyncUI('', 'Offline');
             return;
         }
+        
+        if (!syncConfig.password) {
+            syncConfig.password = localStorage.getItem('nexus_sync_saved_pwd') || '';
+        }
+
         if (!syncConfig.password) {
             updateSyncUI('busy', 'Needs Passphrase');
             return;
@@ -1003,9 +1012,14 @@
             updateSyncUI('', 'Offline');
             return;
         }
+
+        if (!syncConfig.password) {
+            syncConfig.password = localStorage.getItem('nexus_sync_saved_pwd') || '';
+        }
+
         if (!syncConfig.password) {
             updateSyncUI('busy', 'Locked');
-            openModal('sync-modal');
+            if (notify) openModal('sync-modal');
             return;
         }
 
@@ -1093,7 +1107,6 @@
     const symMap = { 'USD': '$', 'CAD': 'C$', 'INR': '₹' };
     const sym = () => symMap[currency];
     
-    // FORMATTER WITH PRIVACY MASK
     const fmt = (v, forceRaw = false) => {
         if (isPrivacyMode && !forceRaw) return `${sym()}••••••`;
         const num = Number(v);
@@ -1104,7 +1117,6 @@
     
     const chartColors = ['#0F172A', '#3B82F6', '#10B981', '#8B5CF6', '#F59E0B', '#14B8A6', '#64748B'];
 
-    // SMART BANK & ACCOUNT NAME PARSER
     function parseBankAndAccount(fullName) {
         const str = (fullName || '').trim();
         
@@ -1155,7 +1167,6 @@
     
     function setCurrency(val) { currency = val; saveState(); refreshView(); }
     
-    // PERSIST ACTIVE PAGE ACROSS RELOADS
     function navTo(pageId, el) {
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
         document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
@@ -1272,9 +1283,6 @@
         toggleFormFields();
     }
 
-    // ==========================================
-    // SMART SNAPSHOT RECORDER & CASCADE RENAMER
-    // ==========================================
     function saveRecord() {
         const name = document.getElementById('in-name').value.trim();
         const val = parseFloat(document.getElementById('in-val').value);
@@ -1311,7 +1319,6 @@
             const idx = db.findIndex(x => x.id === editId); 
             if(idx > -1) {
                 const oldName = db[idx].name;
-                // If the user changed the name of an existing asset
                 if(oldName && oldName !== name) {
                     const matchCount = db.filter(x => x.name === oldName).length;
                     const confirmRenameAll = confirm(
@@ -1370,8 +1377,8 @@
         if (id === 'sync-modal') {
             document.getElementById('sync-token').value = syncConfig.token;
             document.getElementById('sync-gist-id').value = syncConfig.gistId;
-            document.getElementById('sync-pwd').value = syncConfig.password;
-            document.getElementById('sync-remember-pwd').checked = syncConfig.rememberPwd;
+            document.getElementById('sync-pwd').value = syncConfig.password || localStorage.getItem('nexus_sync_saved_pwd') || '';
+            document.getElementById('sync-remember-pwd').checked = syncConfig.rememberPwd !== false;
         }
         document.getElementById(id).style.display='flex'; 
         setTimeout(()=>document.getElementById(id).classList.add('show'), 10); 
@@ -1513,7 +1520,7 @@
     }
 
     // ==========================================
-    // 6. BANK ACCOUNTS RENDERER (WITH "TOTAL" LABEL)
+    // 6. BANK ACCOUNTS RENDERER
     // ==========================================
     function renderBankAccounts() {
         const container = document.getElementById('bank-groups-container');
@@ -1645,7 +1652,6 @@
 
         container.innerHTML = html;
 
-        // Render RRSP cards into Line 1
         if (rrspItems.length > 0) {
             const rrspGrid = document.getElementById('rrsp-grid');
             rrspItems.forEach((a, i) => {
@@ -1674,7 +1680,6 @@
             });
         }
 
-        // Render Stocks/Other cards into Line 2
         if (stockItems.length > 0) {
             const stocksGrid = document.getElementById('stocks-grid');
             stockItems.forEach((a, i) => {
@@ -1761,34 +1766,62 @@
         u.forEach(n => s.innerHTML+=`<option value="${n}">${n}</option>`); s.value=curr;
     }
 
+    // DYNAMIC PIE, STACKED BAR & INTERACTIVE LEGEND BADGES
     function drawPieAndBar(arr, total, pieId, barId, legId) {
         const pie = document.getElementById(pieId); pie.innerHTML='';
         const bar = document.getElementById(barId); bar.innerHTML='';
         const leg = document.getElementById(legId); leg.innerHTML='';
         const tt = document.getElementById('tooltip');
         
-        let start = -0.5*Math.PI;
+        if (!arr || !arr.length || total <= 0) {
+            return;
+        }
+
+        let start = -0.5 * Math.PI;
         arr.forEach((a, i) => {
             const color = chartColors[i % chartColors.length];
-            const slice = (Math.abs(a.val) / (total||1)) * 2 * Math.PI;
+            const valPct = ((Math.abs(a.val) / (total || 1)) * 100).toFixed(1);
+            const slice = (Math.abs(a.val) / (total || 1)) * 2 * Math.PI;
             
             const x1 = Math.cos(start), y1 = Math.sin(start), x2 = Math.cos(start+slice), y2 = Math.sin(start+slice);
             const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
             path.setAttribute("d", `M 0 0 L ${x1} ${y1} A 1 1 0 ${slice>Math.PI?1:0} 1 ${x2} ${y2} Z`);
-            path.setAttribute("fill", color); path.setAttribute("stroke", "var(--pearl-card)"); path.setAttribute("stroke-width", "0.05");
-            pie.appendChild(path); start += slice;
+            path.setAttribute("fill", color); 
+            path.setAttribute("stroke", "var(--pearl-card)"); 
+            path.setAttribute("stroke-width", "0.05");
+            pie.appendChild(path); 
+            start += slice;
             
-            const seg = document.createElement('div'); seg.className = 'stacked-seg';
-            seg.style.width = `${(Math.abs(a.val)/(total||1))*100}%`; seg.style.background = color;
+            const seg = document.createElement('div'); 
+            seg.className = 'stacked-seg';
+            seg.style.width = `${valPct}%`; 
+            seg.style.background = color;
             bar.appendChild(seg);
 
-            leg.innerHTML += `<div style="display:flex; align-items:center; gap:6px;"><div style="width:10px;height:10px;border-radius:2px;background:${color}"></div>${a.name}</div>`;
+            const badge = document.createElement('div');
+            badge.style.display = 'inline-flex';
+            badge.style.alignItems = 'center';
+            badge.style.gap = '8px';
+            badge.style.background = 'var(--silver-100)';
+            badge.style.border = '1px solid var(--silver-200)';
+            badge.style.padding = '6px 12px';
+            badge.style.borderRadius = '20px';
+            badge.style.cursor = 'pointer';
+            badge.style.transition = 'all 0.2s ease';
+            badge.innerHTML = `
+                <span style="width:8px; height:8px; border-radius:50%; background:${color}; flex-shrink:0;"></span>
+                <span style="color:var(--charcoal-900); font-weight:700;">${a.name}</span>
+                <span style="color:var(--text-muted); font-weight:600; font-size:11px;">${valPct}%</span>
+            `;
+            badge.onclick = () => openDetail(a.name);
+            leg.appendChild(badge);
 
-            const hoverFn = () => { tt.classList.add('show'); tt.innerHTML=`${a.name}<br>${fmt(a.val)}`; };
+            const hoverFn = () => { tt.classList.add('show'); tt.innerHTML=`<strong>${a.name}</strong><br>${fmt(a.val)} (${valPct}%)`; };
             const moveFn = (e) => { tt.style.left=e.clientX+15+'px'; tt.style.top=e.clientY-15+'px'; };
             const outFn = () => tt.classList.remove('show');
             path.onmouseenter = hoverFn; path.onmousemove = moveFn; path.onmouseleave = outFn;
             seg.onmouseenter = hoverFn; seg.onmousemove = moveFn; seg.onmouseleave = outFn;
+            badge.onmouseenter = hoverFn; badge.onmousemove = moveFn; badge.onmouseleave = outFn;
         });
     }
 
@@ -1861,15 +1894,18 @@
     }
 
     // ==========================================
-    // 8. ENCRYPTED EXPORT & SMART IMPORT
+    // 8. ENCRYPTED EXPORT & SMART IMPORT (REMEMBERED KEY)
     // ==========================================
     async function exportData() {
         if (!db.length) return alert("No data available to export.");
 
-        let password = syncConfig.password;
+        let password = syncConfig.password || localStorage.getItem('nexus_sync_saved_pwd');
         if (!password) {
             password = prompt("Enter your Master Passphrase to encrypt this backup file:");
             if (!password) return;
+            syncConfig.password = password;
+            localStorage.setItem('nexus_sync_saved_pwd', password);
+            localStorage.setItem('nexus_sync_remember_pwd', 'true');
         }
 
         try {
@@ -1901,7 +1937,7 @@
                 let finalData = null;
 
                 if (parsed.salt && parsed.iv && parsed.data) {
-                    let password = syncConfig.password;
+                    let password = syncConfig.password || localStorage.getItem('nexus_sync_saved_pwd');
                     if (!password) {
                         password = prompt("This backup is encrypted. Enter the Master Passphrase to decrypt:");
                         if (!password) {
@@ -1913,9 +1949,9 @@
                     try {
                         const decryptedStr = await CryptoService.decrypt(parsed, password);
                         finalData = JSON.parse(decryptedStr);
-                        if (!syncConfig.password) {
-                            syncConfig.password = password;
-                        }
+                        syncConfig.password = password;
+                        localStorage.setItem('nexus_sync_saved_pwd', password);
+                        localStorage.setItem('nexus_sync_remember_pwd', 'true');
                     } catch (decryptErr) {
                         alert("❌ Decryption failed: Incorrect Master Passphrase or corrupted file.");
                         e.target.value = '';
@@ -2019,14 +2055,17 @@
         updatePrivacyUI();
         updateFilters(); 
 
-        // Restore previously viewed tab so reload stays on the same page
+        // Always check and apply saved passphrase so no prompts occur
+        const savedPass = localStorage.getItem('nexus_sync_saved_pwd');
+        if (savedPass) {
+            syncConfig.password = savedPass;
+        }
+
         const savedPage = localStorage.getItem('nexus_active_page') || 'overview';
         navTo(savedPage);
 
-        // Fetch Live CAD -> INR rate with smart daily refresh & caching
         fetchCadInrRate(false);
 
-        // Periodically verify if ECB published a new daily rate
         setInterval(() => {
             fetchCadInrRate(false);
         }, 60 * 60 * 1000);
