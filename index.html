@@ -404,6 +404,29 @@
             .row-right { text-align: left; width: 100%; display: flex; justify-content: space-between; align-items: center; }
             .inv-summary-card { flex-direction: column !important; align-items: center !important; text-align: center; }
         }
+
+        /* ===== REMITTANCES ===== */
+        .tx-card { cursor: default; gap: 12px; }
+        .tx-card:hover { transform: none; }
+        .tx-right { text-align: right; font-variant-numeric: tabular-nums; }
+        .tx-inr { font-size: 12px; font-weight: 700; color: var(--text-muted); margin-top: 3px; }
+        .tx-actions { display: flex; gap: 6px; margin-left: 10px; }
+        .tx-actions button { background: none; border: none; cursor: pointer; font-size: 14px; color: var(--silver-400); padding: 4px 6px; border-radius: 6px; }
+        .tx-actions button:hover { background: var(--silver-200); color: var(--charcoal-900); }
+        .tx-totals-box { display:flex; align-items:center; gap:20px; background:var(--pearl-card); border:1px solid var(--silver-200); border-radius:var(--radius-md); padding:12px 22px; box-shadow:0 2px 8px rgba(0,0,0,0.04); }
+        .tx-totals-box .tx-div { width:1px; align-self:stretch; background:var(--silver-200); }
+        .tx-totals-box .lbl { font-size:10px; font-weight:800; letter-spacing:1.2px; text-transform:uppercase; color:var(--text-muted); text-align:right; }
+        .tx-totals-box .num { font-size:26px; font-weight:800; letter-spacing:-1px; text-align:right; font-variant-numeric:tabular-nums; color:var(--charcoal-900); }
+        .tx-totals-box .num.inr { color:#10B981; }
+        .tx-stats { display:grid; grid-template-columns:repeat(4,1fr); gap:20px; margin-bottom:24px; }
+        .tx-stats .bento-card { min-height:0; padding:20px 22px; gap:8px; }
+        .tx-stats .bento-value { font-size:26px; letter-spacing:-0.5px; margin-top:0; }
+        .tx-toolbar { display:flex; justify-content:space-between; gap:16px; margin-bottom:24px; flex-wrap:wrap; }
+        .tx-toolbar input, .tx-toolbar select { background:var(--pearl-card); border:1px solid var(--silver-200); }
+        .tx-empty { grid-column:1/-1; border:1.5px dashed var(--silver-200); border-radius:var(--radius-lg); background:var(--pearl-card); padding:60px 30px; text-align:center; }
+        @media (max-width: 1100px) { .tx-stats { grid-template-columns:repeat(2,1fr); } }
+        @media (max-width: 600px) { .tx-stats { grid-template-columns:1fr; } .tx-toolbar > * { width:100% !important; max-width:none !important; } }
+        .tx-rate-preview { font-size: 12px; font-weight: 700; color: var(--text-muted); margin: -6px 0 18px; }
     </style>
 </head>
 <body>
@@ -450,6 +473,10 @@
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
         Fixed Deposits
     </div>
+    <div class="nav-item" onclick="navTo('transfers', this)">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+        Money Sent (India)
+    </div>
     <div class="nav-item" onclick="navTo('ledger', this)">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
         History Ledger
@@ -478,6 +505,10 @@
             <button class="btn-secondary" onclick="downloadDetailedPDF()">Full PDF</button>
         </div>
         
+        <div style="display:flex; gap:8px;">
+            <button class="btn-secondary" onclick="openTransferModal()">+ Send Money</button>
+        </div>
+
         <button class="btn-add" onclick="openSlideOver()">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
             Add Record
@@ -559,6 +590,16 @@
             <div class="bento-card span-2x1" style="overflow-y:auto;">
                 <div class="bento-label" style="margin-bottom:15px; position:sticky; top:0; background:var(--pearl-card); z-index:10; padding-bottom:5px;">Top Assets</div>
                 <div id="dash-top-list"></div>
+            </div>
+            <div class="bento-card span-4x1" style="align-self:start; min-height:0; cursor:pointer; flex-direction:row; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:16px;" onclick="navTo('transfers')" title="Open Money Sent">
+                <div>
+                    <div class="bento-label">Money Sent to India</div>
+                    <div style="font-size:12px; font-weight:600; color:var(--text-muted); margin-top:6px;" id="dash-ms-meta">0 transfers • not included in net worth</div>
+                </div>
+                <div style="display:flex; gap:28px; align-items:baseline; flex-wrap:wrap;">
+                    <div class="bento-value" style="font-size:30px; margin-top:0;" id="dash-ms-cad">C$0.00</div>
+                    <div class="bento-value" style="font-size:30px; margin-top:0; color:#10B981;" id="dash-ms-inr">₹0.00</div>
+                </div>
             </div>
         </div>
     </div>
@@ -648,7 +689,68 @@
         
         <div id="ledger-list"></div>
     </div>
+    <!-- MONEY SENT -->
+    <div id="transfers" class="page">
+        <div class="page-header" style="flex-direction:column; align-items:flex-start; margin-bottom:24px;">
+            <div>
+                <h1 class="page-title">Money Sent</h1>
+                <p style="color:var(--text-muted); font-weight:600;">International remittances to India, clubbed by recipient just like bank accounts.</p>
+            </div>
+            <div style="display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
+                <div class="fx-badge" onclick="fetchCadInrRate(true)" title="Click to refresh.">
+                    <span class="fx-pulse-dot"></span>
+                    <span class="cad-inr-sync-text">1 CAD = ₹--</span>
+                </div>
+                <div class="tx-totals-box">
+                    <div><div class="lbl">Total Sent (CAD)</div><div class="num" id="tx-total-cad">C$0.00</div></div>
+                    <div class="tx-div"></div>
+                    <div><div class="lbl">Total Sent (INR)</div><div class="num inr" id="tx-total-inr">₹0.00</div></div>
+                </div>
+                <button class="btn-submit" style="width:auto; margin:0; padding:14px 22px; text-transform:none; letter-spacing:0;" onclick="openTransferModal()">+ &nbsp;Log Money Sent</button>
+            </div>
+        </div>
+
+        <div class="tx-stats">
+            <div class="bento-card"><div class="bento-label">Total Beneficiaries</div><div class="bento-value" id="tx-stat-people">0 People</div></div>
+            <div class="bento-card"><div class="bento-label">Transfer Records</div><div class="bento-value" id="tx-stat-count">0 Transfers</div></div>
+            <div class="bento-card"><div class="bento-label">Avg Effective Exchange Rate</div><div class="bento-value" id="tx-stat-rate">1 CAD = ₹--</div></div>
+            <div class="bento-card"><div class="bento-label">Top Beneficiary</div><div class="bento-value" id="tx-stat-top" style="font-size:22px;">None</div></div>
+        </div>
+
+        <div class="tx-toolbar">
+            <input type="text" id="tx-search" placeholder="Search by recipient, purpose, or channel..." oninput="renderTransfers()" style="max-width:420px;">
+            <select id="tx-filter" onchange="renderTransfers()" style="max-width:240px;"><option value="all">Filter: All Recipients</option></select>
+        </div>
+
+        <div class="bank-groups-layout" id="transfers-container"></div>
+    </div>
 </main>
+
+<!-- MONEY SENT MODAL -->
+<div class="modal-bg" id="transfer-modal" onclick="closeModal('transfer-modal')">
+    <div class="modal-content" onclick="event.stopPropagation()" style="max-height:90vh; overflow-y:auto;">
+        <h2 style="font-size:22px; font-weight:800; margin-bottom:18px;" id="tx-form-title">Log Money Sent</h2>
+        <div class="form-group">
+            <span class="form-label">Sent To (Recipient)</span>
+            <div class="chip-container" id="tx-quick" style="margin-bottom:10px;"></div>
+            <input type="text" id="tx-person" placeholder="e.g. Mom, Rahul, Landlord">
+        </div>
+        <div style="display:flex; gap:10px;">
+            <div class="form-group" style="flex:1;"><span class="form-label">Amount Sent (CAD)</span><input type="number" id="tx-cad" step="any" placeholder="0.00" oninput="updateTxRatePreview()"></div>
+            <div class="form-group" style="flex:1;"><span class="form-label">Received (INR)</span><input type="number" id="tx-inr" step="any" placeholder="0.00" oninput="updateTxRatePreview()"></div>
+        </div>
+        <div class="tx-rate-preview"><span id="tx-rate-text">Rate: --</span> &nbsp;·&nbsp; <a href="#" onclick="fillTxInrFromLive(); return false;" style="color:var(--charcoal-900);">Fill INR from today's rate</a></div>
+        <div class="form-group"><span class="form-label">Date</span><input type="date" id="tx-date"></div>
+        <div style="display:flex; gap:10px;">
+            <div class="form-group" style="flex:1;"><span class="form-label">Purpose (optional)</span><input type="text" id="tx-purpose" placeholder="e.g. Rent, Family support"></div>
+            <div class="form-group" style="flex:1;"><span class="form-label">Channel (optional)</span><input type="text" id="tx-channel" placeholder="e.g. Wise, Remitly"></div>
+        </div>
+        <div style="display:flex; gap:10px;">
+            <button class="btn-submit" style="margin:0; flex:1;" onclick="saveTransfer()">Save</button>
+            <button class="btn-secondary" style="flex:0 0 auto; padding:0 22px;" onclick="closeModal('transfer-modal')">Cancel</button>
+        </div>
+    </div>
+</div>
 
 <!-- SLIDE-OVER PANEL (DATA ENTRY) -->
 <div class="slide-over" id="slide-form">
@@ -978,7 +1080,7 @@
 
         try {
             updateSyncUI('busy', 'Syncing...');
-            const payload = JSON.stringify({ assets: db, goals, currency });
+            const payload = JSON.stringify({ assets: db, goals, currency, transfers });
             const encryptedPayload = await CryptoService.encrypt(payload, syncConfig.password);
 
             const res = await fetch(`https://api.github.com/gists/${syncConfig.gistId}`, {
@@ -1049,6 +1151,11 @@
             goals = data.goals || goals;
             currency = data.currency || currency;
 
+            // Remittances: only overwrite if the cloud vault already has them (older vaults keep local transfers)
+            let transfersNotInCloud = false;
+            if (Array.isArray(data.transfers)) { transfers = data.transfers; localStorage.setItem('nexus_transfers', JSON.stringify(transfers)); }
+            else if (transfers.length) transfersNotInCloud = true;
+
             localStorage.setItem('nexus_vision_db', JSON.stringify(db));
             localStorage.setItem('nexus_vision_goals', JSON.stringify(goals));
             localStorage.setItem('nexus_currency', currency);
@@ -1057,6 +1164,7 @@
             updateFilters();
             refreshView();
             updateSyncUI('online', 'Synced');
+            if (transfersNotInCloud) pushToGist();
             if (notify) alert("Successfully decrypted and synced data from GitHub!");
         } catch (err) {
             console.error('Pull from Gist failed:', err);
@@ -1158,10 +1266,163 @@
         return { bank: str, account: 'Primary Account' };
     }
 
+    // ==========================================
+    // 5b. REMITTANCES (separate dataset: `transfers`)
+    // ==========================================
+    let transfers = (() => { try { const t = JSON.parse(localStorage.getItem('nexus_transfers')); return Array.isArray(t) ? t : []; } catch (e) { return []; } })();
+    let editTransferId = null;
+
+    function saveTransfers() {
+        localStorage.setItem('nexus_transfers', JSON.stringify(transfers));
+        pushToGist();
+    }
+    const escHTML = (v) => String(v == null ? '' : v).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    const fmtCAD = (v) => isPrivacyMode ? 'C$••••••' : 'C$' + Number(v).toLocaleString('en-CA', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    const fmtINR = (v) => isPrivacyMode ? '₹••••••' : '₹' + Number(v).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+
+    function updateTxRatePreview() {
+        const cad = parseFloat(document.getElementById('tx-cad').value), inr = parseFloat(document.getElementById('tx-inr').value);
+        document.getElementById('tx-rate-text').innerText = (cad > 0 && inr > 0) ? `Rate: 1 CAD = ₹${(inr / cad).toFixed(2)}` : 'Rate: --';
+    }
+    function fillTxInrFromLive() {
+        const rate = parseFloat(localStorage.getItem('nexus_cad_inr_rate'));
+        const cad = parseFloat(document.getElementById('tx-cad').value);
+        if (!rate) return alert("Live rate not loaded yet.");
+        if (!(cad > 0)) return alert("Enter the CAD amount first.");
+        document.getElementById('tx-inr').value = (cad * rate).toFixed(2);
+        updateTxRatePreview();
+    }
+    function openTransferModal(id) {
+        editTransferId = id || null;
+        const t = id ? transfers.find(x => x.id === id) : null;
+        document.getElementById('tx-form-title').innerText = t ? 'Edit Money Sent' : 'Log Money Sent';
+        document.getElementById('tx-person').value = t ? t.person : '';
+        document.getElementById('tx-cad').value = t ? t.cad : '';
+        document.getElementById('tx-inr').value = t ? t.inr : '';
+        document.getElementById('tx-date').value = t ? t.date : new Date().toISOString().split('T')[0];
+        document.getElementById('tx-purpose').value = t ? (t.purpose || t.note || '') : '';
+        document.getElementById('tx-channel').value = t ? (t.channel || '') : '';
+        const q = document.getElementById('tx-quick'); q.innerHTML = '';
+        const seen = {};
+        transfers.forEach(x => { const k = x.person.trim().toLowerCase(); if (!seen[k]) seen[k] = x.person.trim(); });
+        Object.values(seen).sort().forEach(n => {
+            const d = document.createElement('div'); d.className = 'chip'; d.innerText = n;
+            d.onclick = () => { document.getElementById('tx-person').value = n; document.getElementById('tx-cad').focus(); };
+            q.appendChild(d);
+        });
+        updateTxRatePreview();
+        openModal('transfer-modal');
+    }
+    function saveTransfer() {
+        const person = document.getElementById('tx-person').value.trim();
+        const cad = parseFloat(document.getElementById('tx-cad').value);
+        const inr = parseFloat(document.getElementById('tx-inr').value);
+        const date = document.getElementById('tx-date').value || new Date().toISOString().split('T')[0];
+        const purpose = document.getElementById('tx-purpose').value.trim();
+        const channel = document.getElementById('tx-channel').value.trim();
+        if (!person) return alert("Please enter who the money was sent to.");
+        if (!(cad > 0) || !(inr > 0)) return alert("Please enter both the CAD amount and the INR amount.");
+        if (editTransferId) {
+            const i = transfers.findIndex(x => x.id === editTransferId);
+            if (i > -1) transfers[i] = { ...transfers[i], person, cad, inr, date, purpose, channel, note: '' };
+        } else {
+            transfers.push({ id: 'tx_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7), person, cad, inr, date, purpose, channel });
+        }
+        saveTransfers();
+        closeModal('transfer-modal');
+        refreshView();
+    }
+    function deleteTransfer(id) {
+        if (!confirm("Delete this record?")) return;
+        transfers = transfers.filter(x => x.id !== id);
+        saveTransfers();
+        refreshView();
+    }
+    function updateMoneySentCard() {
+        const c = transfers.reduce((s, t) => s + t.cad, 0), i = transfers.reduce((s, t) => s + t.inr, 0);
+        const set = (id, v) => { const el = document.getElementById(id); if (el) el.innerText = v; };
+        set('dash-ms-cad', fmtCAD(c)); set('dash-ms-inr', fmtINR(i));
+        set('dash-ms-meta', `${transfers.length} ${transfers.length === 1 ? 'transfer' : 'transfers'} • not included in net worth`);
+    }
+    function renderTransfers() {
+        const container = document.getElementById('transfers-container');
+        const totCad = transfers.reduce((s, t) => s + t.cad, 0), totInr = transfers.reduce((s, t) => s + t.inr, 0);
+        document.getElementById('tx-total-cad').innerText = fmtCAD(totCad);
+        document.getElementById('tx-total-inr').innerText = fmtINR(totInr);
+
+        // all recipients (unfiltered) for stats + dropdown
+        const all = {};
+        transfers.forEach(t => {
+            const k = t.person.trim().toLowerCase();
+            if (!all[k]) all[k] = { key: k, name: t.person.trim(), items: [], cad: 0, inr: 0 };
+            all[k].items.push(t); all[k].cad += t.cad; all[k].inr += t.inr;
+        });
+        const people = Object.values(all).sort((a, b) => b.cad - a.cad);
+        document.getElementById('tx-stat-people').innerText = `${people.length} ${people.length === 1 ? 'Person' : 'People'}`;
+        document.getElementById('tx-stat-count').innerText = `${transfers.length} ${transfers.length === 1 ? 'Transfer' : 'Transfers'}`;
+        document.getElementById('tx-stat-rate').innerText = totCad > 0 ? `1 CAD = ₹${(totInr / totCad).toFixed(2)}` : '1 CAD = ₹--';
+        document.getElementById('tx-stat-top').innerText = people.length ? people[0].name : 'None';
+
+        const sel = document.getElementById('tx-filter'), prev = sel.value;
+        sel.innerHTML = '<option value="all">Filter: All Recipients</option>' + people.slice().sort((a, b) => a.name.localeCompare(b.name)).map(g => `<option value="${escHTML(g.key)}">${escHTML(g.name)}</option>`).join('');
+        sel.value = people.some(g => g.key === prev) ? prev : 'all';
+
+        if (!transfers.length) {
+            container.innerHTML = `<div class="tx-empty"><div style="font-size:40px;">💸</div>
+                <div style="font-size:19px; font-weight:800; margin:10px 0 6px;">No Money Sent Records Yet</div>
+                <p style="max-width:520px; margin:0 auto 22px; font-size:13px; line-height:1.6; color:var(--text-muted);">Track international funds sent to family, friends, or accounts in India. Log the CAD sent and corresponding INR received at that time, clubbed by recipient.</p>
+                <button class="btn-submit" style="width:auto; padding:14px 26px; text-transform:none; letter-spacing:0;" onclick="openTransferModal()">+ Log Your First Transfer</button></div>`;
+            return;
+        }
+
+        const term = document.getElementById('tx-search').value.trim().toLowerCase();
+        const fv = sel.value;
+        const groups = [];
+        people.forEach(g => {
+            if (fv !== 'all' && g.key !== fv) return;
+            const items = g.items.filter(t => !term || [t.person, t.purpose, t.note, t.channel].some(f => (f || '').toLowerCase().includes(term)));
+            if (items.length) groups.push({ ...g, items: items.sort((a, b) => new Date(b.date) - new Date(a.date)) });
+        });
+        if (!groups.length) { container.innerHTML = '<div class="empty-state" style="grid-column: 1/-1;">No records match your search.</div>'; return; }
+
+        container.innerHTML = groups.map(g => {
+            const gc = g.items.reduce((s, t) => s + t.cad, 0), gi = g.items.reduce((s, t) => s + t.inr, 0);
+            const rows = g.items.map(t => {
+                const meta = [t.purpose || t.note, t.channel].filter(Boolean).map(escHTML).join(' • ');
+                return `
+                <div class="bank-sub-card tx-card">
+                    <div>
+                        <div class="bank-sub-name">${escHTML(t.date)}</div>
+                        <div class="bank-sub-meta">${meta ? meta + ' • ' : ''}1 CAD = ₹${(t.inr / t.cad).toFixed(2)}</div>
+                    </div>
+                    <div style="display:flex; align-items:center;">
+                        <div class="tx-right"><div class="bank-sub-val">${fmtCAD(t.cad)}</div><div class="tx-inr">${fmtINR(t.inr)}</div></div>
+                        <div class="tx-actions"><button title="Edit" onclick="openTransferModal('${t.id}')">✎</button><button title="Delete" onclick="deleteTransfer('${t.id}')">✕</button></div>
+                    </div>
+                </div>`;
+            }).join('');
+            return `
+                <div class="bank-group-card">
+                    <div class="bank-group-header">
+                        <div>
+                            <div class="bank-group-title">${escHTML(g.name)}</div>
+                            <div style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase; margin-top:2px;">${g.items.length} ${g.items.length === 1 ? 'Transfer' : 'Transfers'} • Avg ₹${(gi / gc).toFixed(2)}</div>
+                        </div>
+                        <div class="bank-group-total" style="flex-direction:column; align-items:flex-end; gap:2px;">
+                            <span>${fmtCAD(gc)}</span>
+                            <span style="font-size:13px; color:var(--text-muted);">${fmtINR(gi)}</span>
+                        </div>
+                    </div>
+                    <div class="bank-sub-list">${rows}</div>
+                </div>`;
+        }).join('');
+    }
+
     function saveState() { 
         localStorage.setItem('nexus_vision_db', JSON.stringify(db));
         localStorage.setItem('nexus_vision_goals', JSON.stringify(goals));
         localStorage.setItem('nexus_currency', currency);
+        localStorage.setItem('nexus_transfers', JSON.stringify(transfers));
         pushToGist();
     }
     
@@ -1205,6 +1466,8 @@
         if(document.getElementById('investments').classList.contains('active')) renderInvestments();
         if(document.getElementById('fds').classList.contains('active')) renderFDs();
         if(document.getElementById('ledger').classList.contains('active')) renderManage();
+        if(document.getElementById('transfers').classList.contains('active')) renderTransfers();
+        if(document.getElementById('overview').classList.contains('active')) updateMoneySentCard();
     }
 
     function animateNumber(el, endVal, duration, formatter) {
@@ -1897,7 +2160,7 @@
     // 8. ENCRYPTED EXPORT & SMART IMPORT (REMEMBERED KEY)
     // ==========================================
     async function exportData() {
-        if (!db.length) return alert("No data available to export.");
+        if (!db.length && !transfers.length) return alert("No data available to export.");
 
         let password = syncConfig.password || localStorage.getItem('nexus_sync_saved_pwd');
         if (!password) {
@@ -1909,7 +2172,7 @@
         }
 
         try {
-            const payload = JSON.stringify({ assets: db, goals, currency }, null, 2);
+            const payload = JSON.stringify({ assets: db, goals, currency, transfers }, null, 2);
             const encryptedPayload = await CryptoService.encrypt(payload, password);
             encryptedPayload.encrypted = true;
 
@@ -1965,6 +2228,7 @@
                     db = finalData.assets; 
                     goals = finalData.goals || goals; 
                     currency = finalData.currency || currency; 
+                    if (Array.isArray(finalData.transfers)) transfers = finalData.transfers;
                 } else if (Array.isArray(finalData)) { 
                     db = finalData; 
                 } else {
